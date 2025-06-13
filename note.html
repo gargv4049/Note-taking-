@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Note-Taking App with Live Anime Wallpaper</title>
   <style>
-    /* Import Inter font for modern typography */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-    /* CSS Reset and base */
     *, *::before, *::after {
       box-sizing: border-box;
     }
@@ -23,7 +21,6 @@
       overflow: hidden;
     }
 
-    /* Main app container */
     .app-container {
       display: flex;
       flex-grow: 1;
@@ -31,7 +28,6 @@
       position: relative;
     }
 
-    /* Content area - note-taking placeholder */
     .content-area {
       flex: 1;
       padding: 32px 48px 48px 48px;
@@ -71,7 +67,6 @@
       outline: none;
     }
 
-    /* Live wallpaper container on the right */
     .wallpaper-container {
       position: relative;
       width: 400px;
@@ -85,7 +80,6 @@
       user-select: none;
     }
 
-    /* Canvas for animations */
     #animeWallCanvas {
       width: 100%;
       height: 100vh;
@@ -93,7 +87,6 @@
       background: transparent;
     }
 
-    /* Responsive Adjustments */
     @media (max-width: 1280px) {
       .wallpaper-container {
         width: 320px;
@@ -105,7 +98,6 @@
     }
 
     @media (max-width: 1024px) {
-      /* Hide wallpaper on smaller than tablet */
       .wallpaper-container {
         display: none;
       }
@@ -115,7 +107,6 @@
       }
     }
 
-    /* Anime Art Style - softly glowing layered circles */
     .glow-circle {
       position: absolute;
       border-radius: 50%;
@@ -165,13 +156,56 @@
       50% { transform: translateY(-30px); opacity: 0.3; }
     }
 
-    /* Subtitle styling */
     .subtitle {
       font-weight: 500;
       font-size: 1.1rem;
       color: #bdbdbd;
       margin-bottom: 1rem;
       user-select: none;
+    }
+
+    /* Chat box styles */
+    .chat-box {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 280px;
+      max-height: 360px;
+      background: #1f1f2e;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      font-size: 0.9rem;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .chat-header {
+      padding: 12px;
+      background: #8a52ff;
+      color: white;
+      font-weight: 600;
+      text-align: center;
+      user-select: none;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      background: #27263d;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .chat-input {
+      padding: 10px;
+      border: none;
+      outline: none;
+      background: #2e2e4d;
+      color: #e0e0e0;
+      border-top: 1px solid #3c3c5e;
     }
   </style>
 </head>
@@ -184,16 +218,31 @@
     </section>
 
     <aside class="wallpaper-container" aria-hidden="true" aria-label="Live anime wallpaper decoration">
-      <!-- Glowing circles for ambient effect -->
+      <!-- Glowing circles -->
       <div class="glow-circle glow-circle1"></div>
       <div class="glow-circle glow-circle2"></div>
       <div class="glow-circle glow-circle3"></div>
-      <!-- Canvas for particle animation -->
+
+      <!-- Canvas -->
       <canvas id="animeWallCanvas" width="400" height="900"></canvas>
+
+      <!-- AI Chat Box -->
+      <div class="chat-box">
+        <div class="chat-header">AI Assistant</div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <input
+          type="text"
+          class="chat-input"
+          id="chatInput"
+          placeholder="Ask me anything..."
+          onkeydown="if(event.key==='Enter') sendMessage()"
+        />
+      </div>
     </aside>
   </div>
 
   <script>
+    // Canvas Particle Animation
     (() => {
       const canvas = document.getElementById('animeWallCanvas');
       const ctx = canvas.getContext('2d');
@@ -271,7 +320,27 @@
       window.addEventListener('resize', resize);
       setup();
     })();
+
+    // Simple AI Chat Box Logic
+    function sendMessage() {
+      const input = document.getElementById("chatInput");
+      const messages = document.getElementById("chatMessages");
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      const userMsg = document.createElement("div");
+      userMsg.textContent = "🧑: " + userText;
+      messages.appendChild(userMsg);
+
+      const botMsg = document.createElement("div");
+      botMsg.textContent = "🤖: I'm just a demo AI. Try typing something else!";
+      setTimeout(() => {
+        messages.appendChild(botMsg);
+        messages.scrollTop = messages.scrollHeight;
+      }, 500);
+
+      input.value = "";
+    }
   </script>
 </body>
 </html>
-
