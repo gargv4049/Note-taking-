@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Note-Taking App with Live Anime Wallpaper</title>
+  <style>
+    /* Import Inter font for modern typography */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    /* CSS Reset and base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Main app container */
+    .app-container {
+      display: flex;
+      flex-grow: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Content area - note-taking placeholder */
+    .content-area {
+      flex: 1;
+      padding: 32px 48px 48px 48px;
+      display: flex;
+      flex-direction: column;
+      background-color: #1e1e2f;
+      overflow-y: auto;
+      max-width: 960px;
+      min-width: 320px;
+    }
+
+    header {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #8a52ff;
+      user-select: none;
+    }
+
+    textarea.note-editor {
+      flex-grow: 1;
+      background: #292a3d;
+      border: none;
+      border-radius: 12px;
+      color: #e0e0e0;
+      font-size: 1rem;
+      padding: 16px 24px;
+      resize: none;
+      box-shadow: 0 4px 24px rgba(138, 82, 255, 0.3);
+      transition: box-shadow 0.3s ease;
+      outline-offset: 3px;
+      max-height: 70vh;
+    }
+
+    textarea.note-editor:focus {
+      box-shadow: 0 6px 32px rgba(138, 82, 255, 0.6);
+      outline: none;
+    }
+
+    /* Live wallpaper container on the right */
+    .wallpaper-container {
+      position: relative;
+      width: 400px;
+      min-width: 320px;
+      background: linear-gradient(135deg, #130f40 0%, #1c1c3f 100%);
+      box-shadow: inset 0 0 48px #8a52ff88;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+    }
+
+    /* Canvas for animations */
+    #animeWallCanvas {
+      width: 100%;
+      height: 100vh;
+      display: block;
+      background: transparent;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 1280px) {
+      .wallpaper-container {
+        width: 320px;
+      }
+      .content-area {
+        padding-right: 24px;
+        max-width: calc(100% - 320px);
+      }
+    }
+
+    @media (max-width: 1024px) {
+      /* Hide wallpaper on smaller than tablet */
+      .wallpaper-container {
+        display: none;
+      }
+      .content-area {
+        max-width: 100%;
+        padding: 32px 24px;
+      }
+    }
+
+    /* Anime Art Style - softly glowing layered circles */
+    .glow-circle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.25;
+      filter: blur(70px);
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+    }
+    .glow-circle1 {
+      width: 300px;
+      height: 300px;
+      background: #8a52ff;
+      top: 20%;
+      left: 10%;
+      animation-name: floatUpDown1;
+      animation-duration: 15s;
+    }
+    .glow-circle2 {
+      width: 180px;
+      height: 180px;
+      background: #05c6e8;
+      top: 60%;
+      left: 40%;
+      animation-name: floatUpDown2;
+      animation-duration: 18s;
+    }
+    .glow-circle3 {
+      width: 220px;
+      height: 220px;
+      background: #ff4081;
+      top: 45%;
+      left: 65%;
+      animation-name: floatUpDown3;
+      animation-duration: 20s;
+    }
+
+    @keyframes floatUpDown1 {
+      0%, 100% { transform: translateY(0); opacity: 0.25; }
+      50% { transform: translateY(-40px); opacity: 0.35; }
+    }
+    @keyframes floatUpDown2 {
+      0%, 100% { transform: translateY(0); opacity: 0.25; }
+      50% { transform: translateY(35px); opacity: 0.4; }
+    }
+    @keyframes floatUpDown3 {
+      0%, 100% { transform: translateY(0); opacity: 0.25; }
+      50% { transform: translateY(-30px); opacity: 0.3; }
+    }
+
+    /* Subtitle styling */
+    .subtitle {
+      font-weight: 500;
+      font-size: 1.1rem;
+      color: #bdbdbd;
+      margin-bottom: 1rem;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container" role="main" aria-label="Note-taking application with live anime wallpaper">
+    <section class="content-area">
+      <header>Note-Taking App</header>
+      <div class="subtitle">Write your notes here...</div>
+      <textarea class="note-editor" aria-label="Note editor" placeholder="Start writing your note..."></textarea>
+    </section>
+
+    <aside class="wallpaper-container" aria-hidden="true" aria-label="Live anime wallpaper decoration">
+      <!-- Glowing circles for ambient effect -->
+      <div class="glow-circle glow-circle1"></div>
+      <div class="glow-circle glow-circle2"></div>
+      <div class="glow-circle glow-circle3"></div>
+      <!-- Canvas for particle animation -->
+      <canvas id="animeWallCanvas" width="400" height="900"></canvas>
+    </aside>
+  </div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById('animeWallCanvas');
+      const ctx = canvas.getContext('2d');
+
+      let width, height;
+      let particles = [];
+      const maxParticles = 80;
+
+      function resize() {
+        width = canvas.width = canvas.clientWidth;
+        height = canvas.height = window.innerHeight;
+      }
+
+      class Particle {
+        constructor() {
+          this.reset();
+        }
+
+        reset() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * height;
+          this.size = 2 + Math.random() * 3;
+          this.speedX = (Math.random() - 0.5) * 0.3;
+          this.speedY = 0.1 + Math.random() * 0.3;
+          this.opacity = 0.1 + Math.random() * 0.3;
+          this.color = `hsla(${250 + Math.random() * 100}, 80%, 70%, ${this.opacity})`;
+          this.phase = Math.random() * 2 * Math.PI;
+          this.amplitude = 10 + Math.random() * 20;
+          this.frequency = 0.005 + Math.random() * 0.01;
+        }
+
+        update() {
+          this.y -= this.speedY;
+          this.x += Math.sin(this.phase) * 0.4;
+          this.phase += this.frequency;
+          if (this.y < -this.size) {
+            this.y = height + this.size;
+            this.x = Math.random() * width;
+          }
+        }
+
+        draw(ctx) {
+          ctx.beginPath();
+          const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
+          gradient.addColorStop(0, this.color);
+          gradient.addColorStop(1, 'transparent');
+          ctx.fillStyle = gradient;
+          ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function initParticles() {
+        particles = [];
+        for (let i = 0; i < maxParticles; i++) {
+          particles.push(new Particle());
+        }
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach(p => {
+          p.update();
+          p.draw(ctx);
+        });
+        requestAnimationFrame(animate);
+      }
+
+      function setup() {
+        resize();
+        initParticles();
+        animate();
+      }
+
+      window.addEventListener('resize', resize);
+      setup();
+    })();
+  </script>
+</body>
+</html>
+
